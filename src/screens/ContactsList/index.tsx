@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   SectionList,
@@ -27,8 +27,10 @@ export default function ContactsList() {
   const dispatch = useAppDispatch();
   const safeArea = useSafeAreaInsets();
 
+  const [requestedPermission, setRequestedPermission] = useState(false);
+
   useEffect(() => {
-    if (!permissionStatus) {
+    if (!requestedPermission) {
       Contacts.requestPermission()
         .then(async (status) => {
           dispatch(setContactsState({ permissionStatus: status }));
@@ -47,13 +49,22 @@ export default function ContactsList() {
           );
         });
 
+      setRequestedPermission(true);
+    } else {
       if (Platform.OS === 'android') {
-        Contacts.checkPermission().then((status) => {
-          dispatch(setContactsState({ permissionStatus: status }));
-        });
+        Contacts.checkPermission()
+          .then((status) => {
+            dispatch(setContactsState({ permissionStatus: status }));
+          })
+          .catch(() => {
+            Alert.alert(
+              'Permission Error',
+              'There was an error trying to ask for contacts permission',
+            );
+          });
       }
     }
-  }, [contacts, permissionStatus, dispatch]);
+  }, [contacts, permissionStatus, requestedPermission, dispatch]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -70,8 +81,8 @@ export default function ContactsList() {
       <FavoriteContactDisplay />
 
       {permissionStatus === 'denied' && (
-        <View style={styles.deniedScreen}>
-          <View style={styles.deniedContainer}>
+        <View style={styles.messageScreen}>
+          <View style={styles.messageContainer}>
             <FastImage
               source={require('../../assets/images/contacts-denied.png')}
               style={{ width: 180, height: 180 }}
@@ -122,24 +133,49 @@ export default function ContactsList() {
               </View>
             );
           }}
-          renderSectionHeader={({ section }) => (
-            <ContactSectionHeader title={section.title} />
-          )}
+          renderSectionHeader={({ section }) => {
+            if (
+              section.data.length === 1 &&
+              section.data[0].recordID === favoriteContact?.recordID
+            ) {
+              return null;
+            }
+
+            return <ContactSectionHeader title={section.title} />;
+          }}
           stickySectionHeadersEnabled
           contentContainerStyle={{ alignItems: 'center' }}
         />
+      ) : !contacts.length && permissionStatus === 'authorized' ? (
+        <View style={styles.messageScreen}>
+          <View style={styles.messageContainer}>
+            <FastImage
+              source={require('../../assets/images/open-book.png')}
+              style={{ width: 180, height: 180 }}
+              resizeMode="contain"
+            />
+            <Text
+              fontFamily="semiBold"
+              fontSize={20}
+              textAlign="center"
+              color={config.colors.lightBlueGray}
+            >
+              Your contacts list is empty
+            </Text>
+          </View>
+        </View>
       ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  deniedScreen: {
+  messageScreen: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  deniedContainer: {
+  messageContainer: {
     width: '80%',
     paddingVertical: 30,
     borderRadius: 30,
