@@ -6,6 +6,7 @@ export const config = {
     darkBlueGray: '#132850',
     lightBlueGray: '#99B4E8',
     yellow: '#FBE25D',
+    red: '#FB5D5D',
   },
   fontFamily: {
     light: 'Poppins-Light',

@@ -1,11 +1,20 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+  Animated,
+} from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import FastImage from 'react-native-fast-image';
 import DropShadow from 'react-native-drop-shadow';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MainStackParamsList } from '../../routes';
+import { useAppDispatch, useAppSelector } from '../../hooks';
+import { toggleFavoriteContact } from '../../store/contacts';
 import Text from '../../components/Text';
 import { config } from '../../styles';
 import AvatarIcon from '../../assets/icons/avatar.svg';
@@ -13,17 +22,44 @@ import ChevronLeft from '../../assets/icons/chevron-left.svg';
 import Phone from '../../assets/icons/phone.svg';
 import Email from '../../assets/icons/email.svg';
 import Building from '../../assets/icons/building.svg';
+import Star from '../../assets/icons/star.svg';
 
 interface ContactDetailsProps
   extends StackScreenProps<MainStackParamsList, 'ContactDetails'> {}
 
 export default function ContactDetails({ route }: ContactDetailsProps) {
   const { data, backgroundColor } = route.params;
+
   const { goBack } = useNavigation();
+  const { favoriteContact } = useAppSelector((state) => state.contactsList);
+  const dispatch = useAppDispatch();
+  const safeArea = useSafeAreaInsets();
+
+  const detailsOpacity = useRef(new Animated.Value(0)).current;
+  const isFavoriteContact = favoriteContact?.recordID === data.recordID;
+
+  useEffect(() => {
+    Animated.timing(detailsOpacity, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
+  }, [detailsOpacity]);
 
   return (
     <View style={styles.screenContainer}>
-      <DropShadow style={styles.dropShadow}>
+      {Platform.OS === 'ios' && (
+        <View
+          style={{
+            width: '100%',
+            height: safeArea.top,
+            backgroundColor: config.colors.darkBlueGray,
+            zIndex: 10,
+          }}
+        />
+      )}
+
+      <DropShadow style={styles.headerDropShadow}>
         <View style={styles.detailsHeader}>
           <TouchableOpacity
             style={styles.chevronContainer}
@@ -40,58 +76,82 @@ export default function ContactDetails({ route }: ContactDetailsProps) {
           <Text fontFamily="semiBold" fontSize={20} color="white">
             Contact Details
           </Text>
+
+          <TouchableOpacity
+            style={styles.starContainer}
+            onPress={() => dispatch(toggleFavoriteContact({ contact: data }))}
+          >
+            <Star
+              width={30}
+              height={30}
+              fill={
+                isFavoriteContact
+                  ? config.colors.yellow
+                  : config.colors.lightBlueGray
+              }
+            />
+          </TouchableOpacity>
         </View>
       </DropShadow>
 
-      <View style={styles.detailsContainer}>
-        {data.hasThumbnail ? (
-          <FastImage
-            source={{ uri: data.thumbnailPath }}
-            style={styles.thumbnail}
-            resizeMode="cover"
-          />
-        ) : (
-          <View
-            style={[
-              styles.thumbnail,
-              {
-                backgroundColor,
-                alignItems: 'center',
-                justifyContent: 'center',
-              },
-            ]}
-          >
-            <AvatarIcon fill="white" width={150} height={150} />
-          </View>
-        )}
-
-        <Text
-          fontFamily="semiBold"
-          fontSize={20}
-          style={{ marginVertical: 15 }}
+      <DropShadow style={styles.detailsDropShadow}>
+        <Animated.View
+          style={[styles.detailsContainer, { opacity: detailsOpacity }]}
         >
-          {data.displayName}
-        </Text>
+          {data.hasThumbnail ? (
+            <FastImage
+              source={{ uri: data.thumbnailPath }}
+              style={styles.thumbnail}
+              resizeMode="cover"
+            />
+          ) : (
+            <View
+              style={[
+                styles.thumbnail,
+                {
+                  backgroundColor,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                },
+              ]}
+            >
+              <AvatarIcon fill="white" width={150} height={150} />
+            </View>
+          )}
 
-        {data.phoneNumbers.length ? (
-          <Phone fill={config.colors.darkBlueGray} width={20} height={20} />
-        ) : null}
-        {data.phoneNumbers.map(({ number }) => (
-          <Text>{number}</Text>
-        ))}
+          <Text
+            fontFamily="semiBold"
+            fontSize={20}
+            color={config.colors.black}
+            style={{ marginVertical: 15 }}
+          >
+            {data.displayName}
+          </Text>
 
-        {data.emailAddresses.length ? (
-          <Email fill={config.colors.darkBlueGray} width={20} height={20} />
-        ) : null}
-        {data.emailAddresses.map(({ email }) => (
-          <Text>{email}</Text>
-        ))}
+          {data.phoneNumbers.length ? (
+            <Phone fill={config.colors.darkBlueGray} width={20} height={20} />
+          ) : null}
+          {data.phoneNumbers.map(({ number }) => (
+            <Text>{number}</Text>
+          ))}
 
-        {data.company && (
-          <Building fill={config.colors.darkBlueGray} width={20} height={20} />
-        )}
-        <Text>{data.company}</Text>
-      </View>
+          {data.emailAddresses.length ? (
+            <Email fill={config.colors.darkBlueGray} width={20} height={20} />
+          ) : null}
+          {data.emailAddresses.map(({ email }) => (
+            <Text>{email}</Text>
+          ))}
+
+          {data.company && (
+            <Building
+              fill={config.colors.darkBlueGray}
+              width={20}
+              height={20}
+            />
+          )}
+          <Text>{data.company}</Text>
+        </Animated.View>
+      </DropShadow>
     </View>
   );
 }
@@ -122,7 +182,7 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 20,
   },
-  dropShadow: {
+  headerDropShadow: {
     width: '100%',
     height: 60,
     shadowColor: config.colors.black,
@@ -130,9 +190,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 5,
   },
+  detailsDropShadow: {
+    width: '100%',
+    alignItems: 'center',
+    shadowColor: config.colors.black,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.5,
+    shadowRadius: 7,
+  },
   chevronContainer: {
     position: 'absolute',
     left: 20,
   },
   chevronLeft: {},
+  starContainer: {
+    position: 'absolute',
+    left: '86%',
+  },
 });

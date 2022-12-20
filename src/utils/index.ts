@@ -1,3 +1,4 @@
+import { Alert } from 'react-native';
 import Contacts, { Contact } from 'react-native-contacts';
 
 export const getRandomNumber = (min: number, max: number) => {
@@ -5,24 +6,35 @@ export const getRandomNumber = (min: number, max: number) => {
 };
 
 export const getSectionedContacts = async () => {
-  const allContacts = await Contacts.getAll();
+  try {
+    const allContacts = await Contacts.getAll();
 
-  const letterMap: Record<string, Contact[]> = {};
+    const letterMap: Record<string, Contact[]> = {};
 
-  allContacts.forEach((contact) => {
-    const letter = contact.displayName[0].toUpperCase();
+    allContacts.forEach((contact) => {
+      const { displayName, givenName, familyName } = contact;
 
-    letterMap[letter] = letterMap[letter] || [];
+      if (!displayName) {
+        contact = { ...contact, displayName: `${givenName} ${familyName}` };
+      }
 
-    letterMap[letter].push(contact);
-  });
+      const letter = contact.displayName[0].toUpperCase();
 
-  const sectionedContacts = Object.entries(letterMap)
-    .map(([letter, list]) => ({
-      title: letter,
-      data: list,
-    }))
-    .sort((a, b) => a.title.localeCompare(b.title));
+      letterMap[letter] = letterMap[letter] || [];
 
-  return sectionedContacts;
+      letterMap[letter].push(contact);
+    });
+
+    const sectionedContacts = Object.entries(letterMap)
+      .map(([letter, list]) => ({
+        title: letter,
+        data: list,
+      }))
+      .sort((a, b) => a.title.localeCompare(b.title));
+
+    return sectionedContacts;
+  } catch (error) {
+    console.log(error);
+    Alert.alert('Error', 'There was an error trying to get all contacts');
+  }
 };

@@ -7,9 +7,9 @@ import FastImage from 'react-native-fast-image';
 import { config, THUMBNAIL_BACKGROUND_COLORS } from '../../styles';
 import Text from '../Text';
 import { useAppDispatch, useAppSelector } from '../../hooks';
+import { toggleFavoriteContact } from '../../store/contacts';
 import { getRandomNumber } from '../../utils';
 import Star from '../../assets/icons/star.svg';
-import { setContactsState } from '../../store/contacts';
 
 interface ContactItemProps {
   data: Contact;
@@ -28,24 +28,6 @@ export default function ContactItem({ data }: ContactItemProps) {
     [],
   );
   const randomColor = THUMBNAIL_BACKGROUND_COLORS[randomNumber];
-
-  const toggleFavoriteContact = () => {
-    if (isFavoriteContact) {
-      dispatch(
-        setContactsState({
-          favoriteContact: undefined,
-        }),
-      );
-
-      return;
-    }
-
-    dispatch(
-      setContactsState({
-        favoriteContact: data,
-      }),
-    );
-  };
 
   return (
     <TouchableOpacity
@@ -81,13 +63,13 @@ export default function ContactItem({ data }: ContactItemProps) {
           </Text>
         </View>
       )}
-      <Text fontSize={14} fontFamily="medium">
+      <Text fontSize={14} fontFamily="medium" color={config.colors.black}>
         {displayName}
       </Text>
 
       <TouchableOpacity
         style={styles.starContainer}
-        onPress={() => toggleFavoriteContact()}
+        onPress={() => dispatch(toggleFavoriteContact({ contact: data }))}
       >
         <Star
           width={30}

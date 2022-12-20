@@ -12,6 +12,7 @@ interface TextProps extends RNTextProps {
   style?: StyleProp<TextStyle>;
   fontSize?: number;
   color?: string;
+  textAlign?: TextStyle['textAlign'];
   fontFamily?: keyof typeof config.fontFamily;
 }
 
@@ -20,6 +21,7 @@ export default function Text({
   style,
   fontSize = 16,
   color,
+  textAlign,
   fontFamily = 'regular',
   ...otherProps
 }: TextProps) {
@@ -29,6 +31,7 @@ export default function Text({
         {
           fontSize,
           color,
+          textAlign,
           fontFamily: config.fontFamily[fontFamily],
         },
         style,

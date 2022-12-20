@@ -1,4 +1,3 @@
-import { PermissionStatus } from 'react-native';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Contact } from 'react-native-contacts';
 
@@ -8,7 +7,7 @@ export type ContactsListState = {
     data: Contact[];
   }[];
   favoriteContact?: Contact;
-  permissionStatus?: PermissionStatus;
+  permissionStatus?: 'authorized' | 'denied' | 'undefined';
 };
 
 const initialState: ContactsListState = {
@@ -29,7 +28,21 @@ export const contactsListSlice = createSlice({
         state[name as keyof ContactsListState] = value as any;
       });
     },
+    toggleFavoriteContact: (
+      state,
+      { payload }: PayloadAction<{ contact: Contact }>,
+    ) => {
+      const { contact } = payload;
+
+      if (state.favoriteContact?.recordID === contact.recordID) {
+        state.favoriteContact = undefined;
+        return;
+      }
+
+      state.favoriteContact = contact;
+    },
   },
 });
 
-export const { setContactsState } = contactsListSlice.actions;
+export const { setContactsState, toggleFavoriteContact } =
+  contactsListSlice.actions;
