@@ -1,13 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   SectionList,
   StatusBar,
   Platform,
-  Alert,
   StyleSheet,
 } from 'react-native';
-import Contacts from 'react-native-contacts';
 import FastImage from 'react-native-fast-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -16,7 +14,10 @@ import ContactSectionHeader from '../../components/ContactSectionHeader';
 import FavoriteContactDisplay from '../../components/FavoriteContactDisplay';
 import Text from '../../components/Text';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { getSectionedContacts } from '../../utils';
+import {
+  getContactsPermission,
+  getSectionedContacts,
+} from '../../utils/contacts';
 import { setContactsState } from '../../store/contacts';
 import { config } from '../../styles';
 
@@ -27,44 +28,20 @@ export default function ContactsList() {
   const dispatch = useAppDispatch();
   const safeArea = useSafeAreaInsets();
 
-  const [requestedPermission, setRequestedPermission] = useState(false);
-
   useEffect(() => {
-    if (!requestedPermission) {
-      Contacts.requestPermission()
-        .then(async (status) => {
-          dispatch(setContactsState({ permissionStatus: status }));
+    if (!permissionStatus) {
+      getContactsPermission().then(async (status) => {
+        dispatch(setContactsState({ permissionStatus: status }));
 
-          if (status !== 'authorized') {
-            return;
-          }
+        if (status !== 'authorized') {
+          return;
+        }
 
-          const sectionedContacts = await getSectionedContacts();
-          dispatch(setContactsState({ contacts: sectionedContacts }));
-        })
-        .catch(() => {
-          Alert.alert(
-            'Permission Error',
-            'There was an error trying to ask for contacts permission',
-          );
-        });
-
-      setRequestedPermission(true);
-    } else {
-      if (Platform.OS === 'android') {
-        Contacts.checkPermission()
-          .then((status) => {
-            dispatch(setContactsState({ permissionStatus: status }));
-          })
-          .catch(() => {
-            Alert.alert(
-              'Permission Error',
-              'There was an error trying to ask for contacts permission',
-            );
-          });
-      }
+        const sectionedContacts = await getSectionedContacts();
+        dispatch(setContactsState({ contacts: sectionedContacts }));
+      });
     }
-  }, [contacts, permissionStatus, requestedPermission, dispatch]);
+  }, [contacts, permissionStatus, dispatch]);
 
   return (
     <View style={{ flex: 1 }}>

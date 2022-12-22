@@ -1,9 +1,5 @@
-import { Alert } from 'react-native';
+import { Alert, PermissionsAndroid, Platform } from 'react-native';
 import Contacts, { Contact } from 'react-native-contacts';
-
-export const getRandomNumber = (min: number, max: number) => {
-  return Math.floor(Math.random() * (max - min + 1) + min);
-};
 
 export const getSectionedContacts = async () => {
   try {
@@ -36,5 +32,39 @@ export const getSectionedContacts = async () => {
   } catch (error) {
     console.log(error);
     Alert.alert('Error', 'There was an error trying to get all contacts');
+  }
+};
+
+export const getContactsPermission = async (): Promise<
+  'authorized' | 'denied' | undefined
+> => {
+  try {
+    if (Platform.OS === 'ios') {
+      const status = await Contacts.requestPermission();
+
+      if (status === 'authorized') {
+        return 'authorized';
+      } else {
+        return 'denied';
+      }
+    }
+
+    if (Platform.OS === 'android') {
+      const status = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+      );
+
+      if (status === 'granted') {
+        return 'authorized';
+      } else {
+        return 'denied';
+      }
+    }
+  } catch (error) {
+    console.log(error);
+    Alert.alert(
+      'Permission Error',
+      'There was an error trying to ask for contacts permission',
+    );
   }
 };

@@ -8,7 +8,7 @@ import { config, THUMBNAIL_BACKGROUND_COLORS } from '../../styles';
 import Text from '../Text';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { toggleFavoriteContact } from '../../store/contacts';
-import { getRandomNumber } from '../../utils';
+import { getRandomNumber } from '../../utils/common';
 import Star from '../../assets/icons/star.svg';
 
 interface ContactItemProps {

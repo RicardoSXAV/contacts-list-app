@@ -7,7 +7,7 @@ export type ContactsListState = {
     data: Contact[];
   }[];
   favoriteContact?: Contact;
-  permissionStatus?: 'authorized' | 'denied' | 'undefined';
+  permissionStatus?: 'authorized' | 'denied';
 };
 
 const initialState: ContactsListState = {
