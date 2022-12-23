@@ -39,6 +39,7 @@ export default function ContactItem({ data }: ContactItemProps) {
           data,
         })
       }
+      testID={data.recordID}
     >
       {hasThumbnail ? (
         <FastImage

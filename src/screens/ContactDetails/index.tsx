@@ -132,14 +132,14 @@ export default function ContactDetails({ route }: ContactDetailsProps) {
             <Phone fill={config.colors.darkBlueGray} width={20} height={20} />
           ) : null}
           {data.phoneNumbers.map(({ number }) => (
-            <Text>{number}</Text>
+            <Text key={number}>{number}</Text>
           ))}
 
           {data.emailAddresses.length ? (
             <Email fill={config.colors.darkBlueGray} width={20} height={20} />
           ) : null}
           {data.emailAddresses.map(({ email }) => (
-            <Text>{email}</Text>
+            <Text key={email}>{email}</Text>
           ))}
 
           {data.company && (
